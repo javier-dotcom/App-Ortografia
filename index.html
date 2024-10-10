@@ -292,8 +292,24 @@
 
         // Función para mezclar las palabras
         function mezclarPalabras(arr) {
-            return arr.sort(() => Math.random() - 0.5);
+            let i = arr.length;
+            let temp, randomIndex;
+        
+            // Mientras queden elementos por mezclar
+            while (i !== 0) {
+                // Selecciona un índice aleatorio
+                randomIndex = Math.floor(Math.random() * i);
+                i--;
+        
+                // Intercambia el elemento actual con el aleatorio
+                temp = arr[i];
+                arr[i] = arr[randomIndex];
+                arr[randomIndex] = temp;
+            }
+        
+            return arr;
         }
+        
 
         function iniciarJuego() {
             nombre = document.getElementById('nombre').value;
