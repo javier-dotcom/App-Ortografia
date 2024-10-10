@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicio Ortográfico</title>
+    <style>
+       
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .hidden {
+            display: none;
+           
+        }
+
+        .palabra {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 30px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #resultado {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            button {
+                font-size: 1.2rem;
+                padding: 10px 20px;
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            
+        }
+
+        .modal-content {
+           
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="container">
+      
+        <h1>Juego de Ortografía</h1>
+
+        <!-- Formulario para ingresar nombre y elegir cantidad de ítems -->
+        <div id="inicio">
+            <label for="nombre">Ingresa tu nombre:</label>
+            <input type="text" id="nombre" required><br><br>
+
+            <label for="cantidad">Cantidad de ítems:</label>
+            <select id="cantidad">
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="10">10</option>
+            </select><br><br>
+
+            <button onclick="iniciarJuego()">Comenzar</button>
+        </div>
+
+        <!-- Contenedor de las palabras -->
+        <div id="ejercicio" class="hidden">
+            <h2 id="saludo"></h2>
+            <div id="palabras"></div>
+        </div>
+
+        <!-- Resultado final -->
+        <div id="resultado" class="hidden"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-texto"></h3>
+            <button id="modal-button" onclick="cerrarModal()">Entendido</button>
+        </div>
+    </div>
+    <img src="letras.png" alt="" width="300px"> 
+    <script>
+        let nombre;
+        let cantidad;
+        let palabraActual = 0;
+        let puntaje = 0;
+        const palabras = [
+        // Primera tanda lista
+        { correcta: 'Doblar', incorrecta: 'Dovlar', regla: 'La letra B se usa antes de la letra L.' },
+    {  incorrecta: 'Vrazo',correcta: 'Brazo', regla: 'La letra B se usa antes de la letra R.' },
+    { correcta: 'Blusa', incorrecta: 'Vlusa', regla: 'La letra B se usa antes de la letra L.' },
+    {  incorrecta: 'Avrir',correcta: 'Abrir', regla: 'La letra B se usa antes de la letra R.' },
+    { correcta: 'Obtener', incorrecta: 'Ovtener', regla: 'La letra B se usa antes de consonante.' },
+    { incorrecta: 'Cluv', correcta: 'Club', regla: 'La letra B se usa al final de la palabra.' },
+    { correcta: 'Obligar', incorrecta: 'Ovligar', regla: 'La letra B se usa antes de la L.' },
+    { incorrecta: 'Suvrayar',correcta: 'Subrayar',  regla: 'La letra B se usa antes de la letra R.' },
+    { correcta: 'Tabla', incorrecta: 'Tavla', regla: 'La letra B se usa antes de la letra L.' },
+    {  incorrecta: 'Ovtuso',correcta: 'Obtuso', regla: 'La letra B  antes de la T.' },
+        
+        // Segunda tanda lista
+        { correcta: 'Recibir', incorrecta: 'Recivir', regla: 'Se escribe con B en los verbos que terminan en BIR.' },
+        {  incorrecta: 'Suvir',correcta: 'Subir', regla: 'Se escribe con B en los verbos que terminan en BIR.' },
+        { correcta: 'Escribir', incorrecta: 'Escrivir', regla: 'Se escribe con B en los verbos que terminan en BIR.' },
+        {  incorrecta: 'Descuvrir', correcta: 'Descubrir',regla: 'Se escribe con B en los verbos que terminan en BIR.' },
+      
+        {  incorrecta: 'Prohivir',correcta: 'Prohibir', regla: 'Se escribe con B en los verbos que terminan en BIR.' },
+        { correcta: 'Prohibir', incorrecta: 'Prohivir', regla: 'Se escribe con B en los verbos que terminan en BIR.' },
+       
+      
+    
+        // Tercera tanda lista
+        { correcta: 'Bebía', incorrecta: 'Vebía', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        { incorrecta: 'Devemos', correcta: 'Debemos', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        { correcta: 'Cabía', incorrecta: 'Cavía', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        {  incorrecta: 'Savías',correcta: 'Sabías', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        { correcta: 'Había', incorrecta: 'Havía', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        { incorrecta: 'Vebimos',  correcta: 'Bebimos',regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        { correcta: 'Debía', incorrecta: 'Devía', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        {  incorrecta: 'Caveré', correcta: 'Caberé',regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        { correcta: 'Sabremos', incorrecta: 'Savremos', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        {  incorrecta: 'Huviera',correcta: 'Hubiera', regla: 'Siempre se escriben con B cualquier tiempo verbal de los siguientes verbos: Beber, deber, caber, saber y haber.' },
+        // Cuarta tanda listo
+        { correcta: 'Cantaba', incorrecta: 'Cantava', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        {  incorrecta: 'Bailavas',correcta: 'Bailabas', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        { correcta: 'Saltábamos', incorrecta: 'Saltávamos', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        { incorrecta: 'Jugavais', correcta: 'Jugabais', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        { correcta: 'Miraban', incorrecta: 'Miravan', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        {  incorrecta: 'Trabajava',correcta: 'Trabajaba', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        { correcta: 'Escuchabas', incorrecta: 'Escuchavas', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        {  incorrecta: 'Estudiávamos',correcta: 'Estudiábamos', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        { correcta: 'Cocinabais', incorrecta: 'Cocinavais', regla: 'Siempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+        {  incorrecta: 'Pintavan',correcta: 'Pintaban', regla: 'SSiempre se escriben con B las terminaciones -Aba, -Abas, -Ábamos, -Abais y -Aban de los verbos de la primera conjugación.' },
+    
+        // Quinta tanda lista
+        { correcta: 'Octavo', incorrecta: 'Octabo', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Braba', correcta: 'Brava',regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Nuevo', incorrecta: 'Nuebo', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Nueba',correcta: 'Nueva', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Leve', incorrecta: 'Lebe', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Afectibo',correcta: 'Afectivo', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Intensiva', incorrecta: 'Intensiba', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Décimoctabo',correcta: 'Décimoctavo', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+       
+        { incorrecta: 'Resolutibo', correcta: 'Resolutivo', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Viva', incorrecta: 'Biba', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Brebe', correcta: 'Breve',regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Cautivo', incorrecta: 'Cautibo', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Actiba',correcta: 'Activa', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Comparativa', incorrecta: 'Comparatiba', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Pasiba',correcta: 'Pasiva', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Creativa', incorrecta: 'Creatiba', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Expresiba',correcta: 'Expresiva', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        { correcta: 'Curva', incorrecta: 'Curba', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+        {  incorrecta: 'Exclusiba',correcta: 'Exclusiva', regla: 'Siempre se escribe con V los adjetivos que acaban en -avo, -ava, -evo, -eva, -eve, -ivo, -iva.' },
+    
+        // Sexta tanda  lista
+       
+        { incorrecta: 'Revorber', correcta: 'Revolver', regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+        { correcta: 'Disolver', incorrecta: 'Disolber', regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+        {  incorrecta: 'Devolber', correcta: 'Devolver',regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+        { correcta: 'Absolver', incorrecta: 'Absolber', regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+        { incorrecta: 'Envolber', correcta: 'Envolver', regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+        { correcta: 'Volver', incorrecta: 'Vorber', regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+        { incorrecta: 'Desenvolber', correcta: 'Desenvolver', regla: 'Siempre se escriben con V las formas verbales que acaban en -olver.' },
+    
+        // Séptima tanda lista
+        { correcta: '¿Por qué no viniste ayer?', incorrecta: '¿Porque no viniste ayer?', regla: 'Se usa "Por qué" cuando hacemos una pregunta.' },
+        {  incorrecta: 'No vine por qué tenía que trabajar.',correcta: 'No vine porque tenía que trabajar.', regla: 'Se usa "Porque" para dar una explicación.' },
+        { correcta: '¿Por qué no me dijiste nada?', incorrecta: '¿Porque no me dijiste nada?', regla: 'Se usa "Por qué" cuando hacemos una pregunta.' },
+        {  incorrecta: 'No te dije nada por qué pensé que ya lo sabías.',correcta: 'No te dije nada porque pensé que ya lo sabías.', regla: 'Se usa "Porque" para dar una explicación.' },
+        { correcta: '¿Por qué estás triste?', incorrecta: '¿Porque estás triste?', regla: 'Se usa "Por qué" cuando hacemos una pregunta.' },
+        { incorrecta: 'Estoy triste por qué las cosas no salieron bien.', correcta: 'Estoy triste porque las cosas no salieron bien.', regla: 'Se usa "Porque" para dar una explicación.' },
+        { correcta: '¿Por qué quieres saberlo?', incorrecta: '¿Porque quieres saberlo?', regla: 'Se usa "Por qué" cuando hacemos una pregunta.' },
+        { incorrecta: 'Quiero saberlo por qué me preocupa tu bienestar.', correcta: 'Quiero saberlo porque me preocupa tu bienestar.', regla: 'Se usa "Porque" para dar una explicación.' },
+        { correcta: '¿Por qué no contestas mis llamadas?', incorrecta: '¿Porque no contestas mis llamadas?', regla: 'Se usa "Por qué" cuando hacemos una pregunta.' },
+        {  incorrecta: 'No contesto por qué estoy muy ocupado.',correcta: 'No contesto porque estoy muy ocupado.', regla: 'Se usa "Porque" para dar una explicación.' },
+
+        // Octava Tanda lista 
+        { correcta: 'Perro', incorrecta: 'Pero', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        {  incorrecta: 'Terible', correcta: 'Terrible',regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        { correcta: 'Correr', incorrecta: 'Corer', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        {  incorrecta: 'Aroz',correcta: 'Arroz', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        {  incorrecta: 'Tiera',correcta: 'Tierra', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        { correcta: 'Guerra', incorrecta: 'Guera', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        {  incorrecta: 'Buro',correcta: 'Burro', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        { correcta: 'Torre', incorrecta: 'Tore', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        {  incorrecta: 'Baro', correcta: 'Barro',regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+        { correcta: 'Herrero', incorrecta: 'Herero', regla: 'Se usa la doble "R" cuando la "R" suena fuerte y está entre vocales.' },
+    ];
+    
+
+        // Función para mezclar las palabras
+        function mezclarPalabras(arr) {
+            return arr.sort(() => Math.random() - 0.5);
+        }
+
+        function iniciarJuego() {
+            nombre = document.getElementById('nombre').value;
+            cantidad = parseInt(document.getElementById('cantidad').value);
+
+            if (!nombre) {
+                alert('Por favor ingresa tu nombre.');
+                return;
+            }
+
+            document.getElementById('saludo').innerText = `¡Buena suerte, ${nombre}!! Elige la plabra correcta`;
+            document.getElementById('inicio').classList.add('hidden');
+            document.getElementById('ejercicio').classList.remove('hidden');
+
+            puntaje = 0;
+            palabraActual = 0;
+
+            const palabrasSeleccionadas = mezclarPalabras(palabras).slice(0, cantidad);
+            mostrarPalabras(palabrasSeleccionadas);
+        }
+function mostrarPalabras(palabrasSeleccionadas) {
+    const palabrasDiv = document.getElementById('palabras');
+    palabrasDiv.innerHTML = '';
+
+    const palabraDiv = document.createElement('div');
+    palabraDiv.className = 'palabra';
+
+    const correcta = palabrasSeleccionadas[palabraActual].correcta;
+    const incorrecta = palabrasSeleccionadas[palabraActual].incorrecta;
+
+    let mezclar = Math.floor(Math.random() * 2); // Esto generará 0 o 1
+
+    console.log(mezclar);
+    if (mezclar === 0) {
+        palabraDiv.innerHTML = `
+            <button onclick="comprobar('${correcta}', true)">${correcta}</button><br>
+            <button onclick="comprobar('${incorrecta}', false)">${incorrecta}</button>
+        `;
+    } else {
+        palabraDiv.innerHTML = `
+            <button onclick="comprobar('${incorrecta}', false)">${incorrecta}</button><br>
+            <button onclick="comprobar('${correcta}', true)">${correcta}</button>
+        `;
+    }
+
+    palabrasDiv.appendChild(palabraDiv);
+}
+
+
+        function comprobar(palabra, esCorrecta) {
+            if (esCorrecta) {
+                const regla = palabras[palabraActual].regla;
+                puntaje++;
+                mostrarModal(`Correcto! La palabra "${palabra}" es la correcta. ${regla}`);
+            } else {
+                const regla = palabras[palabraActual].regla;
+                mostrarModal(`Incorrecto. La palabra correcta es "${palabras[palabraActual].correcta}". Regla: ${regla}`);
+            }
+
+            palabraActual++;
+            if (palabraActual < cantidad) {
+                mostrarPalabras(palabras);
+            } else {
+                mostrarResultado();
+            }
+        }
+        function mostrarResultado() {
+            document.getElementById('ejercicio').classList.add('hidden');
+        
+            // Limpiar contenido anterior antes de agregar el mensaje
+            const resultadoDiv = document.getElementById('resultado');
+            while (resultadoDiv.lastChild) {
+                resultadoDiv.removeChild(resultadoDiv.lastChild);
+            }
+        
+            // Agregar el mensaje de puntaje
+            resultadoDiv.innerText = `${nombre}, tu puntaje final es ${puntaje} de ${cantidad}.`;
+            resultadoDiv.classList.remove('hidden');
+        
+            // Calcular el promedio
+            let promedio = (puntaje / cantidad) * 100; // Asegúrate de que estás usando 'puntaje' en lugar de 'cantidad' para calcular el promedio
+        
+            // Verificar si el elemento promedio existe, si no, crearlo
+            let promedioDiv = document.getElementById('promedio');
+            if (!promedioDiv) {
+                // Crear el elemento promedio si no existe
+                promedioDiv = document.createElement('div');
+                promedioDiv.id = 'promedio'; // Asignar un id al nuevo elemento
+                resultadoDiv.appendChild(promedioDiv); // Agregarlo al contenedor de resultados
+            }
+        
+            // Mostrar el promedio
+            promedioDiv.innerText = `Tu promedio es ${promedio.toFixed(2)}%`; // Mostrar el promedio con dos decimales
+        
+            // Asignar nota y frase motivadora
+            let nota = '';
+            let fraseMotivadora = '';
+        
+            if (promedio >= 90) {
+                nota = 'Excelente';
+                fraseMotivadora = '¡Sigue así! ¡Eres un campeón!';
+            } else if (promedio >= 75) {
+                nota = 'Muy Bien';
+                fraseMotivadora = '¡Buen trabajo! ¡Sigue esforzándote!';
+            } else if (promedio >= 60) {
+                nota = 'Bien';
+                fraseMotivadora = '¡Lo estás haciendo bien, pero hay margen para mejorar!';
+             } else if (promedio >= 50) {
+                nota = 'Regular';
+                fraseMotivadora = 'Intenta mejorar! No te desanimes, pero sigue así.';
+            } else if (promedio >= 40) {
+                nota = 'Regular -';
+                fraseMotivadora = 'Practica mas! No te desanimes, pero sigue así.';
+            } else {
+                nota = 'Insuficiente';
+                fraseMotivadora = 'No te desanimes, ¡sigue practicando!';
+            }
+        
+            // Crear un elemento para mostrar la nota
+            const notaDiv = document.createElement('div');
+            notaDiv.innerText = `Nota: ${nota}`;
+            resultadoDiv.appendChild(notaDiv); // Agregar nota al contenedor de resultados
+        
+            // Crear un elemento para mostrar la frase motivadora
+            const fraseDiv = document.createElement('div');
+            fraseDiv.innerText = fraseMotivadora;
+            resultadoDiv.appendChild(fraseDiv); // Agregar frase motivadora al contenedor de resultados
+        
+            // Crear un nuevo botón
+            const button = document.createElement('button');
+            button.innerText = 'A jugar otra vez !!'; // Texto del botón
+            button.onclick = function() {
+                location.reload(); // Funcionalidad de recarga al hacer clic
+            };
+        
+            // Agregar el botón al resultado al final
+            resultadoDiv.appendChild(button); // Asegúrate de que el botón se agrega después del promedio
+        }
+        
+
+
+
+        function mostrarModal(texto) {
+            document.getElementById('modal-texto').innerText = texto;
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Cerrar el modal al hacer clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                cerrarModal();
+            }
+        }
+    </script>
+
+</body>
+</html>
